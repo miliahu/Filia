@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Filia.Api</RootNamespace>
+    <UserSecretsId>filia-api-6c7a9f0e-1d2b-4a3c-9e5f-8b1c2d3e4f5a</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.Seq" />
+    <PackageReference Include="Serilog.Enrichers.Environment" />
+    <PackageReference Include="Serilog.Enrichers.Thread" />
+    <!-- Provides builder.AddNpgsqlDbContext<T>(...) used in Program.cs for Aspire-managed connection injection -->
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Filia.Application\Filia.Application.csproj" />
+    <ProjectReference Include="..\Filia.Infrastructure\Filia.Infrastructure.csproj" />
+    <ProjectReference Include="..\Filia.ServiceDefaults\Filia.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>
