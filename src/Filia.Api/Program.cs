@@ -3,6 +3,7 @@ using Filia.Application;
 using Filia.Infrastructure;
 using Filia.Infrastructure.Persistence;
 using Filia.ServiceDefaults;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,7 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new Microsoft.OpenApi.OpenApiInfo
@@ -38,31 +40,32 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 
 // Aspire wires the "postgresdb" resource's connection string into configuration
 // automatically when this project references the Postgres resource in AppHost.
-builder.AddNpgsqlDbContext<ApplicationDbContext>("filiadb");
+//builder.AddNpgsqlDbContext<ApplicationDbContext>("filiadb");
 
 var app = builder.Build();
 
 app.MapDefaultEndpoints(); // Aspire health/liveness endpoints
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Filia API v1");
+});
 
 app.UseSerilogRequestLogging();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
 // Uncomment to apply EF Core migrations automatically on startup (handy for
 // local/dev and container environments; prefer a dedicated migration job in prod):
-// using (var scope = app.Services.CreateScope())
-// {
-//     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-//     await db.Database.MigrateAsync();
-// }
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 app.Run();
 

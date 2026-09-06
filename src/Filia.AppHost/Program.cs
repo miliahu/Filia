@@ -9,15 +9,13 @@ var builder = DistributedApplication.CreateBuilder(args);
 // user-secrets / the Parameters:* configuration section rather than plain
 // appsettings - see the "postgres-password" / "rustfs-secret-key" parameters below.
 var settings = builder.Configuration.GetSection("Filia");
-var postgresSettings = settings.GetSection("Postgres");
-var rustFsSettings = settings.GetSection("RustFs");
-var rabbitMqSettings = settings.GetSection("RabbitMq");
 
 // PostgreSQL - persistent volume so data survives container restarts across `aspire run`.
+var postgresSettings = settings.GetSection("Postgres");
 var postgresUsername = builder.AddParameter("postgres-username", postgresSettings["Username"] ?? "postgres");
 var postgresPassword = builder.AddParameter("postgres-password", secret: true);
-
 var postgres = builder.AddPostgres("postgres", postgresUsername, postgresPassword)
+    .WithImageTag(postgresSettings["ImageTag"] ?? "16-alpine")
     .WithDataVolume()
     .WithPgAdmin();
 
@@ -25,13 +23,18 @@ var databaseName = postgresSettings["DatabaseName"] ?? "filiadb";
 var filesDb = postgres.AddDatabase(databaseName, databaseName);
 
 // RabbitMQ - used for publishing file lifecycle integration events.
-var rabbitmq = builder.AddRabbitMQ("rabbitmq")
+var rabbitMqSettings = settings.GetSection("RabbitMq");
+var rabbitMqUsername = builder.AddParameter("rabbitmq-username", rabbitMqSettings["Username"] ?? "filia");
+var rabbitMqPassword = builder.AddParameter("rabbitmq-password", secret: true);
+var rabbitmq = builder.AddRabbitMQ("rabbitmq", rabbitMqUsername, rabbitMqPassword)
+    .WithImageTag(rabbitMqSettings["ImageTag"] ?? "3-management-alpine")
     .WithDataVolume(rabbitMqSettings["DataVolumeName"] ?? "filia-rabbitmq-data")
     .WithManagementPlugin();
 
 // RustFS - S3-compatible object storage backing the file content itself.
 // Runs as a plain container resource; the API talks to it over the S3 API
 // via the RustFs:* configuration section / AWSSDK.S3 client.
+var rustFsSettings = settings.GetSection("RustFs");
 var rustFsAccessKey = builder.AddParameter("rustfs-access-key", rustFsSettings["AccessKey"] ?? "rustfs-access-key");
 var rustFsSecretKey = builder.AddParameter("rustfs-secret-key", secret: true);
 
@@ -43,6 +46,7 @@ var rustfs = builder.AddContainer("rustfs", rustFsSettings["Image"] ?? "rustfs/r
     .WithEnvironment("RUSTFS_SECRET_KEY", rustFsSecretKey);
 
 builder.AddProject<Projects.Filia_Api>("filia-api")
+    .WithHttpEndpoint(port: 8080 )
     .WithReference(filesDb)
     .WaitFor(filesDb)
     .WithReference(rabbitmq)

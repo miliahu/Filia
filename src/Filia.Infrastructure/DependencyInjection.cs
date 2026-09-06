@@ -28,7 +28,7 @@ public static class DependencyInjection
             options.UseNpgsql(
                 configuration.GetConnectionString("FiliaDb"),
                 npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "filia"));
-        });
+        }); 
 
         // Repository pattern: Application only ever sees these two contracts.
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
