@@ -47,7 +47,7 @@ tests/
 ## پیش‌نیازها
 
 - .NET 10 SDK
-- Docker (برای Postgres / RustFS / RabbitMQ یا اجرای کامل با docker-compose)
+- Docker (برای Postgres / RustFS یا اجرای کامل با docker-compose)
 - (اختیاری) [Aspire workload](https://learn.microsoft.com/dotnet/aspire): `dotnet workload install aspire`
 
 > **نکته:** این آرشیو در محیطی بدون دسترسی به اینترنت و بدون dotnet SDK نصب‌شده تولید شده،
@@ -83,7 +83,7 @@ dotnet run
 مقادیر حساس (رمز Postgres، Secret Key ی RustFS) به‌صورت Aspire Parameter مدل شده‌اند و
 از user-secrets خوانده می‌شوند، نه از appsettings.
 
-Aspire Dashboard به‌صورت خودکار باز می‌شود و Postgres، RabbitMQ، RustFS و خود API را
+Aspire Dashboard به‌صورت خودکار باز می‌شود و Postgres، RustFS و خود API را
 اجرا/مانیتور می‌کند.
 
 ## اجرا (روش ۲ — docker-compose)

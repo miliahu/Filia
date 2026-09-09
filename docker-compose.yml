@@ -1,4 +1,38 @@
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: filia-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - filia-api
+
+  filia-api:
+    build:
+      context: .
+      dockerfile: src/Filia.Api/Dockerfile
+    container_name: filia-api
+    # پورت 8080 حذف می‌شود تا دسترسی بیرونی مستقیم قطع شود (تنها در شبکه داخلی داکر در دسترس است)
+    expose:
+      - "8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true" # فعال‌سازی خودکار خواندن هدرهای X-Forwarded در دوت‌نت
+      ConnectionStrings__FiliaDb: "Host=postgres;Port=5432;Database=filia;Username=postgres;Password=postgres"
+      RustFs__Endpoint: "http://rustfs:9000"
+      RustFs__AccessKey: "rustfs-access-key"
+      RustFs__SecretKey: "rustfs-secret-key"
+      RustFs__BucketName: "filia-files" 
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rustfs:
+        condition: service_started 
+
   postgres:
     image: postgres:16-alpine
     container_name: filia-postgres
@@ -23,50 +57,11 @@ services:
       RUSTFS_ACCESS_KEY: rustfs-access-key
       RUSTFS_SECRET_KEY: rustfs-secret-key
     ports:
-      - "9000:9000"   # S3 API
-      - "9001:9001"   # console
+      - "9000:9000" # S3 API
+      - "9001:9001" # console
     volumes:
       - rustfs-data:/data
-
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: filia-rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    ports:
-      - "5672:5672"    # AMQP
-      - "15672:15672"  # management UI
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-
-  filia-api:
-    build:
-      context: .
-      dockerfile: src/Filia.Api/Dockerfile
-    container_name: filia-api
-    ports:
-      - "8080:8080"
-    environment:
-      ASPNETCORE_ENVIRONMENT: Production
-      ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__FiliaDb: "Host=postgres;Port=5432;Database=filia;Username=postgres;Password=postgres"
-      RustFs__Endpoint: "http://rustfs:9000"
-      RustFs__AccessKey: "rustfs-access-key"
-      RustFs__SecretKey: "rustfs-secret-key"
-      RustFs__BucketName: "filia-files"
-      RabbitMq__HostName: "rabbitmq"
-      RabbitMq__UserName: "guest"
-      RabbitMq__Password: "guest"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rustfs:
-        condition: service_started
-      rabbitmq:
-        condition: service_started
-
+ 
 volumes:
   postgres-data:
-  rustfs-data:
-  rabbitmq-data:
+  rustfs-data: 

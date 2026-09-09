@@ -17,7 +17,7 @@ namespace Filia.IntegrationTests.Fixtures;
 /// points the API's DbContext at it, replacing the storage/messaging
 /// infrastructure with in-memory fakes so the tests stay hermetic and fast.
 /// This is what lets these be true integration tests (real DB, real EF Core
-/// mappings, real HTTP pipeline) without requiring RustFS/RabbitMQ to be running.
+/// mappings, real HTTP pipeline) without requiring RustFS to be running.
 /// </summary>
 public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
@@ -33,14 +33,12 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
-            services.RemoveAll<IFileStorageService>();
-            services.RemoveAll<IEventBus>();
+            services.RemoveAll<IFileStorageService>(); 
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(_postgresContainer.GetConnectionString()));
 
-            services.AddScoped<IFileStorageService, FakeFileStorageService>();
-            services.AddSingleton<IEventBus, FakeEventBus>();
+            services.AddScoped<IFileStorageService, FakeFileStorageService>(); 
         });
     }
 

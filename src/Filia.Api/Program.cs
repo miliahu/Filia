@@ -3,6 +3,7 @@ using Filia.Application;
 using Filia.Infrastructure;
 using Filia.Infrastructure.Persistence;
 using Filia.ServiceDefaults;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -21,6 +22,15 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
     .Enrich.WithThreadId()
     .WriteTo.Console());
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    
+    // پاک کردن محدودیت پروکسی‌های پیش‌فرض
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -34,7 +44,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Clean Architecture composition root: Application (use cases) + Infrastructure (EF Core/Postgres, RustFS, RabbitMQ).
+// Clean Architecture composition root: Application (use cases) + Infrastructure (EF Core/Postgres, RustFS).
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
@@ -44,6 +54,7 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
 app.MapDefaultEndpoints(); // Aspire health/liveness endpoints
 
 app.UseSwagger();

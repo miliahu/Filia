@@ -5,6 +5,9 @@
     <File Path="LICENSE" />
     <File Path="README.md" />
   </Folder>
+  <Folder Name="/SoultionItems/nginx/">
+    <File Path="nginx/nginx.conf" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Filia.Api/Filia.Api.csproj" />
     <Project Path="src/Filia.AppHost/Filia.AppHost.csproj" />

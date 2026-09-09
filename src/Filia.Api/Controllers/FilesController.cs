@@ -22,7 +22,11 @@ public class FilesController : ControllerBase
     {
         _sender = sender;
     }
-
+    [HttpGet("sample")] 
+    public ActionResult<string>  SampleApi( )
+    {
+        return Ok("ok");
+    }
     /// <summary>Uploads a new file.</summary>
     [HttpPost]
     [RequestSizeLimit(500_000_000)]

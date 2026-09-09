@@ -1,8 +1,7 @@
 using Amazon.S3;
 using Amazon.Runtime;
 using Filia.Application.Common.Interfaces;
-using Filia.Infrastructure.FileStorage;
-using Filia.Infrastructure.Messaging;
+using Filia.Infrastructure.FileStorage; 
 using Filia.Infrastructure.Persistence;
 using Filia.Infrastructure.Persistence.Interceptors;
 using Filia.Infrastructure.Persistence.Repositories;
@@ -51,11 +50,7 @@ public static class DependencyInjection
             return new AmazonS3Client(new BasicAWSCredentials(options.AccessKey, options.SecretKey), config);
         });
         services.AddScoped<IFileStorageService, RustFsStorageService>();
-
-        // --- Messaging (RabbitMQ) ---
-        services.Configure<RabbitMqOptions>(configuration.GetSection(RabbitMqOptions.SectionName));
-        services.AddSingleton<IEventBus, RabbitMqEventBus>();
-
+ 
         return services;
     }
 }
