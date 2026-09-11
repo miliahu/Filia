@@ -17,6 +17,10 @@
     <PackageReference Include="Serilog.Enrichers.Thread" />
     <!-- Provides builder.AddNpgsqlDbContext<T>(...) used in Program.cs for Aspire-managed connection injection -->
     <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
