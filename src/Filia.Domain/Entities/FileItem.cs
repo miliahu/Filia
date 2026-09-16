@@ -15,6 +15,8 @@ public class FileItem : BaseAuditableEntity
     private FileItem() { } // EF Core
 
     public string FileName { get; private set; } = default!;
+    public string? FileTitle { get; set; }
+    public string? Description { get; set; }
     public string ContentType { get; private set; } = default!;
     public long SizeInBytes { get; private set; }
     public string StorageBucket { get; private set; } = default!;
@@ -31,7 +33,9 @@ public class FileItem : BaseAuditableEntity
         string storageBucket,
         string storagePath,
         string checksum,
-        string? folderPath = null)
+        string? folderPath = null,
+        string? fileTitle= null,
+        string? description= null)
     {
         if (string.IsNullOrWhiteSpace(fileName))
             throw new DomainException("File name cannot be empty.");
@@ -46,6 +50,8 @@ public class FileItem : BaseAuditableEntity
         {
             Id = Guid.NewGuid(),
             FileName = fileName,
+            FileTitle =fileTitle,
+            Description = description,
             ContentType = string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType,
             SizeInBytes = sizeInBytes,
             StorageBucket = storageBucket,

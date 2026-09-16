@@ -1,20 +1,16 @@
+using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.Configuration;
 using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Non-secret settings come from appsettings.json / appsettings.Development.json
-// under the "Filia" section, so the AppHost topology can be tuned
-// per-environment without touching this file. Secrets (passwords, RustFS
-// secret key) are still modeled as Aspire parameters, which read from
-// user-secrets / the Parameters:* configuration section rather than plain
-// appsettings - see the "postgres-password" / "rustfs-secret-key" parameters below.
 var settings = builder.Configuration.GetSection("Filia");
 
-// PostgreSQL - persistent volume so data survives container restarts across `aspire run`.
+// ==================== PostgreSQL ====================
 var postgresSettings = settings.GetSection("Postgres");
 var postgresUsername = builder.AddParameter("postgres-username", postgresSettings["Username"] ?? "postgres");
 var postgresPassword = builder.AddParameter("postgres-password", secret: true);
+
 var postgres = builder.AddPostgres("postgres", postgresUsername, postgresPassword)
     .WithImageTag(postgresSettings["ImageTag"] ?? "16-alpine")
     .WithDataVolume()
@@ -23,9 +19,7 @@ var postgres = builder.AddPostgres("postgres", postgresUsername, postgresPasswor
 var databaseName = postgresSettings["DatabaseName"] ?? "filiadb";
 var filesDb = postgres.AddDatabase(databaseName, databaseName);
 
-// RustFS - S3-compatible object storage backing the file content itself.
-// Runs as a plain container resource; the API talks to it over the S3 API
-// via the RustFs:* configuration section / AWSSDK.S3 client.
+// ==================== RustFS ====================
 var rustFsSettings = settings.GetSection("RustFs");
 var rustFsAccessKey = builder.AddParameter("rustfs-access-key", rustFsSettings["AccessKey"] ?? "rustfs-access-key");
 var rustFsSecretKey = builder.AddParameter("rustfs-secret-key", secret: true);
@@ -37,11 +31,13 @@ var rustfs = builder.AddContainer("rustfs", rustFsSettings["Image"] ?? "rustfs/r
     .WithEnvironment("RUSTFS_ACCESS_KEY", rustFsAccessKey)
     .WithEnvironment("RUSTFS_SECRET_KEY", rustFsSecretKey);
 
+var rustFsS3Endpoint = rustfs.GetEndpoint("s3");
+
 builder.AddProject<Filia_Api>("filia-api")
-    .WithHttpEndpoint(port: 8080 )
+    .WithHttpEndpoint(port: 8080)
     .WithReference(filesDb)
-    .WaitFor(filesDb) 
-    .WithEnvironment("RustFs__Endpoint", rustfs.GetEndpoint("s3"))
+    .WaitFor(filesDb)
+    .WithEnvironment("RustFs__Endpoint", ReferenceExpression.Create($"http://{rustFsS3Endpoint.Property(EndpointProperty.Host)}:{rustFsS3Endpoint.Property(EndpointProperty.Port)}"))
     .WithEnvironment("RustFs__AccessKey", rustFsAccessKey)
     .WithEnvironment("RustFs__SecretKey", rustFsSecretKey)
     .WaitFor(rustfs);

@@ -22,11 +22,13 @@ public class FilesController : ControllerBase
     {
         _sender = sender;
     }
-    [HttpGet("sample")] 
-    public ActionResult<string>  SampleApi( )
+
+    [HttpGet("sample")]
+    public ActionResult<string> SampleApi()
     {
         return Ok("ok");
     }
+
     /// <summary>Uploads a new file.</summary>
     [HttpPost]
     [RequestSizeLimit(500_000_000)]
@@ -36,16 +38,24 @@ public class FilesController : ControllerBase
         CancellationToken cancellationToken)
     {
         await using var stream = request.File.OpenReadStream();
-
-        var result = await _sender.Send(new UploadFileCommand
+        UploadFileResult result = null;
+        try
         {
-            FileName = request.File.FileName,
-            ContentType = request.File.ContentType,
-            Content = stream,
-            FolderPath = request.FolderPath
-        }, cancellationToken);
+            result = await _sender.Send(new UploadFileCommand
+            {
+                FileName = request.File.FileName,
+                ContentType = request.File.ContentType,
+                Content = stream,
+                FolderPath = request.FolderPath,
+                Title = request.Title,
+                Description = request.Description,
+            }, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+        }
 
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        return CreatedAtAction(nameof(GetById), new { id = result!.Id }, result);
     }
 
     /// <summary>Gets metadata for a single file.</summary>

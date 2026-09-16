@@ -18,3 +18,6 @@ dotnet ef database update \
 Aspire's Postgres resource will also apply migrations automatically if you
 wire up `context.Database.MigrateAsync()` in a startup hook / migration
 worker - see `Program.cs` in `Filia.Api` for a commented example.
+
+
+dotnet ef migrations add InitialCreate --project src/Filia.Infrastructure --startup-project src/Filia.Api --output-dir Persistence/Migrations
