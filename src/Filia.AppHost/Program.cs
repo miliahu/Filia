@@ -30,14 +30,13 @@ var rustfs = builder.AddContainer("rustfs", rustFsSettings["Image"] ?? "rustfs/r
     .WithVolume(rustFsSettings["DataVolumeName"] ?? "filia-rustfs-data", "/data")
     .WithEnvironment("RUSTFS_ACCESS_KEY", rustFsAccessKey)
     .WithEnvironment("RUSTFS_SECRET_KEY", rustFsSecretKey);
-
-var rustFsS3Endpoint = rustfs.GetEndpoint("s3");
-
+ 
 builder.AddProject<Filia_Api>("filia-api")
     .WithHttpEndpoint(port: 8080)
     .WithReference(filesDb)
     .WaitFor(filesDb)
-    .WithEnvironment("RustFs__Endpoint", ReferenceExpression.Create($"http://{rustFsS3Endpoint.Property(EndpointProperty.Host)}:{rustFsS3Endpoint.Property(EndpointProperty.Port)}"))
+    .WithEnvironment("RustFs__Endpoint", rustFsSettings["PublicEndpoint"]) 
+    .WithEnvironment("RustFs__PublicEndpoint", rustFsSettings["PublicEndpoint"]) 
     .WithEnvironment("RustFs__AccessKey", rustFsAccessKey)
     .WithEnvironment("RustFs__SecretKey", rustFsSecretKey)
     .WaitFor(rustfs);

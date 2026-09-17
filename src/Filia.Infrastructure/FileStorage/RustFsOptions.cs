@@ -6,12 +6,14 @@ namespace Filia.Infrastructure.FileStorage;
 /// </summary>
 public class RustFsOptions
 {
-    public const string SectionName = "RustFs";
-
+    public const string SectionName = "RustFs"; 
+    public string ServiceUrl { get; set; } = string.Empty; 
+    public string? PublicServiceUrl { get; set; }
     public required string Endpoint { get; init; }
     public required string AccessKey { get; init; }
     public required string SecretKey { get; init; }
     public required string BucketName { get; init; }
     public string Region { get; init; } = "us-east-1";
     public bool ForcePathStyle { get; init; } = true;
+    public string? PublicEndpoint { get; init; }
 }

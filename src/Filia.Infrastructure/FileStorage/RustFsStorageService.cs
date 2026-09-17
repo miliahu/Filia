@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Filia.Application.Common.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -16,12 +17,18 @@ namespace Filia.Infrastructure.FileStorage;
 public class RustFsStorageService : IFileStorageService
 {
     private readonly IAmazonS3 _s3Client;
+    private readonly IAmazonS3 _presignClient;
     private readonly RustFsOptions _options;
     private readonly ILogger<RustFsStorageService> _logger;
 
-    public RustFsStorageService(IAmazonS3 s3Client, IOptions<RustFsOptions> options, ILogger<RustFsStorageService> logger)
+    public RustFsStorageService(
+        IAmazonS3 s3Client,
+        [FromKeyedServices("presign")] IAmazonS3 presignClient,
+        IOptions<RustFsOptions> options,
+        ILogger<RustFsStorageService> logger)
     {
         _s3Client = s3Client;
+        _presignClient = presignClient;
         _options = options.Value;
         _logger = logger;
     }
@@ -76,7 +83,7 @@ public class RustFsStorageService : IFileStorageService
         _logger.LogInformation("Deleted object {ObjectKey} from RustFS bucket {Bucket}", storagePath, _options.BucketName);
     }
 
-    public Task<string> GetPresignedDownloadUrlAsync(string storagePath, TimeSpan expiry, CancellationToken cancellationToken)
+    public async Task<string> GetPresignedDownloadUrlAsync(string storagePath, TimeSpan expiry, CancellationToken cancellationToken)
     {
         var request = new GetPreSignedUrlRequest
         {
@@ -86,7 +93,7 @@ public class RustFsStorageService : IFileStorageService
             Expires = DateTime.UtcNow.Add(expiry)
         };
 
-        return Task.FromResult(_s3Client.GetPreSignedURL(request));
+        return await _presignClient.GetPreSignedURLAsync(request);
     }
 
     private async Task EnsureBucketExistsAsync(CancellationToken cancellationToken)
