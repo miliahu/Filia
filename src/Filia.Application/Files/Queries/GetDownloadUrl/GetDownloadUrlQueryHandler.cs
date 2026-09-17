@@ -5,25 +5,16 @@ using MediatR;
 
 namespace Filia.Application.Files.Queries.GetDownloadUrl;
 
-public class GetDownloadUrlQueryHandler : IRequestHandler<GetDownloadUrlQuery, string>
+public class GetDownloadUrlQueryHandler(IFileRepository repository, IFileStorageService storageService) : IRequestHandler<GetDownloadUrlQuery, string>
 {
-    private readonly IFileRepository _repository;
-    private readonly IFileStorageService _storageService;
-
-    public GetDownloadUrlQueryHandler(IFileRepository repository, IFileStorageService storageService)
-    {
-        _repository = repository;
-        _storageService = storageService;
-    }
-
     public async Task<string> Handle(GetDownloadUrlQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await repository.GetByIdAsync(request.Id, cancellationToken);
 
         if (entity is null)
             throw new NotFoundException(nameof(FileItem), request.Id);
 
-        return await _storageService.GetPresignedDownloadUrlAsync(
+        return await storageService.GetPresignedDownloadUrlAsync(
             entity.StoragePath,
             TimeSpan.FromMinutes(15),
             cancellationToken);

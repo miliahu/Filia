@@ -4,7 +4,7 @@ namespace Filia.Application.Files.Commands.UploadFile;
 
 public class UploadFileCommandValidator : AbstractValidator<UploadFileCommand>
 {
-    private static readonly string[] BlockedExtensions = { ".exe", ".dll", ".bat", ".sh", ".cmd" };
+    private static readonly string[] BlockedExtensions = [".exe", ".dll", ".bat", ".sh", ".cmd"];
 
     public UploadFileCommandValidator()
     {

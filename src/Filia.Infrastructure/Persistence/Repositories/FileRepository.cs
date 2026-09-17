@@ -10,23 +10,16 @@ namespace Filia.Infrastructure.Persistence.Repositories;
 /// query operators - Application only ever sees the plain IFileRepository
 /// contract and plain FileItem/PagedResult results.
 /// </summary>
-public class FileRepository : IFileRepository
+public class FileRepository(ApplicationDbContext context) : IFileRepository
 {
-    private readonly ApplicationDbContext _context;
-
-    public FileRepository(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-
     public Task AddAsync(FileItem file, CancellationToken cancellationToken)
     {
-        _context.Files.Add(file);
+        context.Files.Add(file);
         return Task.CompletedTask;
     }
 
     public Task<FileItem?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
-        _context.Files.FirstOrDefaultAsync(f => f.Id == id && !f.IsDeleted, cancellationToken);
+        context.Files.FirstOrDefaultAsync(f => f.Id == id && !f.IsDeleted, cancellationToken);
 
     public async Task<PagedResult<FileItem>> GetPagedAsync(
         string? folderPath,
@@ -35,7 +28,7 @@ public class FileRepository : IFileRepository
         int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = _context.Files.Where(f => !f.IsDeleted);
+        var query = context.Files.Where(f => !f.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(folderPath))
         {

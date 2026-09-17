@@ -11,15 +11,8 @@ namespace Filia.Infrastructure.Persistence.Interceptors;
 /// DomainEventNotification and publishes it through MediatR, then clears
 /// the events off the tracked entities.
 /// </summary>
-public class DispatchDomainEventsInterceptor : SaveChangesInterceptor
+public class DispatchDomainEventsInterceptor(IPublisher publisher) : SaveChangesInterceptor
 {
-    private readonly IPublisher _publisher;
-
-    public DispatchDomainEventsInterceptor(IPublisher publisher)
-    {
-        _publisher = publisher;
-    }
-
     public override async ValueTask<int> SavedChangesAsync(
         SaveChangesCompletedEventData eventData,
         int result,
@@ -49,7 +42,7 @@ public class DispatchDomainEventsInterceptor : SaveChangesInterceptor
         {
             var notificationType = typeof(DomainEventNotification<>).MakeGenericType(domainEvent.GetType());
             var notification = (INotification)Activator.CreateInstance(notificationType, domainEvent)!;
-            await _publisher.Publish(notification);
+            await publisher.Publish(notification);
         }
     }
 }

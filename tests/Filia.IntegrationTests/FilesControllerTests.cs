@@ -11,14 +11,9 @@ using Xunit;
 
 namespace Filia.IntegrationTests;
 
-public class FilesControllerTests : IClassFixture<IntegrationTestWebAppFactory>
+public class FilesControllerTests(IntegrationTestWebAppFactory factory) : IClassFixture<IntegrationTestWebAppFactory>
 {
-    private readonly HttpClient _client;
-
-    public FilesControllerTests(IntegrationTestWebAppFactory factory)
-    {
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient _client = factory.CreateClient();
 
     private static MultipartFormDataContent BuildUploadContent(string fileName, string content, string? folder = null)
     {

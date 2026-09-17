@@ -4,22 +4,11 @@ using MediatR;
 
 namespace Filia.Application.Files.Commands.UploadFile;
 
-public class UploadFileCommandHandler : IRequestHandler<UploadFileCommand, UploadFileResult>
+public class UploadFileCommandHandler(IFileRepository repository, IUnitOfWork unitOfWork, IFileStorageService storageService) : IRequestHandler<UploadFileCommand, UploadFileResult>
 {
-    private readonly IFileRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IFileStorageService _storageService;
-
-    public UploadFileCommandHandler(IFileRepository repository, IUnitOfWork unitOfWork, IFileStorageService storageService)
-    {
-        _repository = repository;
-        _unitOfWork = unitOfWork;
-        _storageService = storageService;
-    }
-
     public async Task<UploadFileResult> Handle(UploadFileCommand request, CancellationToken cancellationToken)
     {
-        var uploaded = await _storageService.UploadAsync(
+        var uploaded = await storageService.UploadAsync(
             request.Content,
             request.FileName,
             request.ContentType,
@@ -34,8 +23,8 @@ public class UploadFileCommandHandler : IRequestHandler<UploadFileCommand, Uploa
             uploaded.Checksum,
             request.FolderPath);
 
-        await _repository.AddAsync(fileItem, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await repository.AddAsync(fileItem, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new UploadFileResult(fileItem.Id, fileItem.FileName, fileItem.SizeInBytes, fileItem.StoragePath);
     }

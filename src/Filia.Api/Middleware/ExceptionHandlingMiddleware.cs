@@ -5,22 +5,13 @@ using ValidationException = Filia.Application.Common.Exceptions.ValidationExcept
 
 namespace Filia.Api.Middleware;
 
-public class ExceptionHandlingMiddleware
+public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
-
-    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
-    {
-        _next = next;
-        _logger = logger;
-    }
-
     public async Task InvokeAsync(HttpContext context)
     {
         try
         {
-            await _next(context);
+            await next(context);
         }
         catch (ValidationException ex)
         {
@@ -32,7 +23,7 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled exception processing {Path}", context.Request.Path);
+            logger.LogError(ex, "Unhandled exception processing {Path}", context.Request.Path);
             await WriteProblemAsync(context, HttpStatusCode.InternalServerError, "Internal Server Error", "An unexpected error occurred.");
         }
     }

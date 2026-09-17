@@ -14,15 +14,8 @@ namespace Filia.Api.Controllers;
 [ApiController]
 [Route("api/v1/files")]
 [Produces("application/json")]
-public class FilesController : ControllerBase
+public class FilesController(ISender sender) : ControllerBase
 {
-    private readonly ISender _sender;
-
-    public FilesController(ISender sender)
-    {
-        _sender = sender;
-    }
-
     [HttpGet("sample")]
     public ActionResult<string> SampleApi()
     {
@@ -41,7 +34,7 @@ public class FilesController : ControllerBase
         UploadFileResult result = null;
         try
         {
-            result = await _sender.Send(new UploadFileCommand
+            result = await sender.Send(new UploadFileCommand
             {
                 FileName = request.File.FileName,
                 ContentType = request.File.ContentType,
@@ -64,7 +57,7 @@ public class FilesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<FileDetailsDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(new GetFileByIdQuery(id), cancellationToken);
+        var result = await sender.Send(new GetFileByIdQuery(id), cancellationToken);
         return Ok(result);
     }
 
@@ -78,7 +71,7 @@ public class FilesController : ControllerBase
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var result = await _sender.Send(new GetFilesListQuery
+        var result = await sender.Send(new GetFilesListQuery
         {
             FolderPath = folderPath,
             SearchTerm = searchTerm,
@@ -95,7 +88,7 @@ public class FilesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<string>> GetDownloadUrl(Guid id, CancellationToken cancellationToken)
     {
-        var url = await _sender.Send(new GetDownloadUrlQuery(id), cancellationToken);
+        var url = await sender.Send(new GetDownloadUrlQuery(id), cancellationToken);
         return Ok(new { downloadUrl = url });
     }
 
@@ -108,7 +101,7 @@ public class FilesController : ControllerBase
         [FromBody] UpdateFileMetadataRequest request,
         CancellationToken cancellationToken)
     {
-        await _sender.Send(new UpdateFileMetadataCommand
+        await sender.Send(new UpdateFileMetadataCommand
         {
             Id = id,
             FileName = request.FileName,
@@ -124,7 +117,7 @@ public class FilesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        await _sender.Send(new DeleteFileCommand(id), cancellationToken);
+        await sender.Send(new DeleteFileCommand(id), cancellationToken);
         return NoContent();
     }
 }

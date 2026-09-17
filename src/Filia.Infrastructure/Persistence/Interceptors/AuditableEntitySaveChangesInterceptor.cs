@@ -6,15 +6,8 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Filia.Infrastructure.Persistence.Interceptors;
 
-public class AuditableEntitySaveChangesInterceptor : SaveChangesInterceptor
+public class AuditableEntitySaveChangesInterceptor(IDateTime dateTime) : SaveChangesInterceptor
 {
-    private readonly IDateTime _dateTime;
-
-    public AuditableEntitySaveChangesInterceptor(IDateTime dateTime)
-    {
-        _dateTime = dateTime;
-    }
-
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
         UpdateAuditableEntities(eventData.Context);
@@ -36,12 +29,12 @@ public class AuditableEntitySaveChangesInterceptor : SaveChangesInterceptor
         {
             if (entry.State == EntityState.Added)
             {
-                entry.Entity.CreatedAt = _dateTime.UtcNow;
+                entry.Entity.CreatedAt = dateTime.UtcNow;
             }
 
             if (entry.State is EntityState.Added or EntityState.Modified || HasChangedOwnedEntities(entry))
             {
-                entry.Entity.LastModifiedAt = _dateTime.UtcNow;
+                entry.Entity.LastModifiedAt = dateTime.UtcNow;
             }
         }
     }
